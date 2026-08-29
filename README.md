@@ -75,6 +75,8 @@ automatically in CI on every push - see `.github/workflows/ci.yml`.
 | `docs/Enhancements.md` | Tracked technical debt and research findings |
 | `docs/architecture/ADR-*.md` | Architectural Decision Records |
 | `languages/LICENSE-DATA.md` | Data licensing boundary explanation |
+| `docs/CODE_OF_CONDUCT.md` | Community behavioral standards |
+| `docs/SECURITY.md` | How to report a security vulnerability |
 
 ## License
 
