@@ -31,17 +31,45 @@ function pass(message) {
 }
 
 console.log('Check 1: Every language program has a NOTICE.md');
+// A language program is a directory directly under languages/ that contains
+// language.meta.json. Shared-infrastructure directories (scaffolds such as
+// languages/registry/) are skipped, unless they contain language-program data
+// without the marker - that combination is flagged as a likely unregistered
+// program rather than silently ignored.
+const PROGRAM_MARKER = 'language.meta.json';
+const PROGRAM_DATA_DIRS = ['corpus', 'speech', 'lexicon', 'benchmarks'];
+
+function isFile(p) {
+  return fs.existsSync(p) && fs.statSync(p).isFile();
+}
+
+function isDirectory(p) {
+  return fs.existsSync(p) && fs.statSync(p).isDirectory();
+}
+
 const languagesDir = path.join(REPO_ROOT, 'languages');
 const languageDirs = fs.readdirSync(languagesDir, { withFileTypes: true })
   .filter((entry) => entry.isDirectory())
   .map((entry) => entry.name);
 
 for (const dirName of languageDirs) {
-  const noticePath = path.join(languagesDir, dirName, 'NOTICE.md');
-  if (fs.existsSync(noticePath)) {
-    pass(`languages/${dirName}/NOTICE.md exists`);
+  const dirPath = path.join(languagesDir, dirName);
+
+  if (isFile(path.join(dirPath, PROGRAM_MARKER))) {
+    const noticePath = path.join(dirPath, 'NOTICE.md');
+    if (fs.existsSync(noticePath)) {
+      pass(`languages/${dirName}/NOTICE.md exists`);
+    } else {
+      fail(`languages/${dirName}/NOTICE.md is MISSING - this language program has no licensing boundary notice`);
+    }
+    continue;
+  }
+
+  const dataDirsFound = PROGRAM_DATA_DIRS.filter((sub) => isDirectory(path.join(dirPath, sub)));
+  if (dataDirsFound.length > 0) {
+    fail(`languages/${dirName}/ appears to contain language-program data (${dataDirsFound.map((d) => d + '/').join(', ')}) but has no ${PROGRAM_MARKER} - add the marker and a NOTICE.md if this is a language program, or move the data out of languages/${dirName}/`);
   } else {
-    fail(`languages/${dirName}/NOTICE.md is MISSING - this language program has no licensing boundary notice`);
+    console.log(`  SKIP: languages/${dirName}/ is not a language program (no ${PROGRAM_MARKER}, no program data directories) - NOTICE.md not required`);
   }
 }
 
